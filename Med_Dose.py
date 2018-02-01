@@ -13,6 +13,7 @@ with open('output.csv', 'w', newline='', encoding = 'utf-8') as fcsv:
     
     writer.writeheader()
     
+    # the requested data should be converted to csv format, and the data should exclude the prescriptions on the day the scan was done, and in case of SNUH, should include 'self medications'
     fp = open("SZ_prescription_23Oct.csv")
     # initialising patiend id, which is data[1]
     patient = '27709908'
