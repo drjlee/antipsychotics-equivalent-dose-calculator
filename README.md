@@ -10,3 +10,9 @@ a few debugging:
 1) fixed a bug where each row was counted was 1 day resulting in exagerrated prescription days count -- now uses the datetime module to calculate the prescription days count
 2) fixed a bug where the first row of each patient was omitted from calculating the antipsychotics dose
 3) fixed a bug where the calculation result of the last patient was omitted from the csv file
+
+# Med_Dose_v3.py
+added functions
+1) olanzapine equivalent value of 'zotepine' added
+2) now automatically omits the rows with '0' prescription days, i.e., 'prn' medications which might not be really administered
+3) now automatically sums up prescription days without using date substraction
