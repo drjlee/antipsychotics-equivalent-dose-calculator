@@ -3,7 +3,7 @@ import datetime
 from datetime import date
 
 # the directory where the csv file is located
-os.chdir("/Users/junheelee/Documents/2016(LJH)/2018Trivia/TaeUk_CLZ_dose/")
+os.chdir("/workingdir/")
 
 # output csv file
 import csv
@@ -13,7 +13,7 @@ with open('output.csv', 'w', newline='', encoding = 'utf-8') as fcsv:
     
     writer.writeheader()
     
-    fp = open("nonCZP.csv")
+    fp = open("test.csv")
     # initialising patiend id, which is data[1]
     patient = '7603594'
     # initialising olzdose & totaldays
@@ -34,18 +34,18 @@ with open('output.csv', 'w', newline='', encoding = 'utf-8') as fcsv:
         #  ['Amisulpride', 'Aripiprazole', 'Blonanserin', 'Haloperidol', 'Olanzapine', 'Paliperidone', 'Quetiapine', 'Risperidon', Risperidon Disp, 'Risperidone', Risperidone Disp, 'Ziprasidone', 'Zyprexa' zydis*, Zyprexa Zydis*]
         # olanzapine equivalent doses were referenced from S Leucht et al., Schizophr Bull 2015;41(6):1397-1402
         drugs = {'Amisulpride':38.3, 'Aripiprazole':1.4, 'Blonanserin':1.6, 'Chlorpromazine':38.9, 'Clozapine':30.6, 'Haloperidol':0.7, 'Olanzapine':1.0, 'Paliperidone':0.6, 'Quetiapine':32.3, 'Risperidone':0.4, 'Ziprasidone':7.9, 'Zotepine':13.2}
-        names = data[7]  ## <-- '약품명(성분명)' here
+        names = data[7]  ## <-- 'drug names' here
         # the first element on the list is the chemical name
         chemical = names.split(' ')
-        if patient == data[1]:  ## <-- '환자번호' here
+        if patient == data[1]:  ## <-- 'patient ID' here
             if chemical[0] in drugs:
                 # \s: a space between chemical names and dosage, \d: dosage, .{0,4}: whatever numbers or characters till 'mg'
-                m1 = re.search('(\s)(\d+.{0,4})(mg)', data[7])  ## <-- '약품명(성분명)' here
+                m1 = re.search('(\s)(\d+.{0,4})(mg)', data[7])  ## <-- 'drug names' here
                 # taking numbers only and then converting into float
                 dosage = float(m1.group(2))
                 # totaltabs is the total number of prescribed tablets
-                totaltabs = float(data[8])  ## <-- '포장단위1일약품투여량' here
-                temp_days = float(data[12])  ## <-- '투약일수' here
+                totaltabs = float(data[8])  ## <-- 'prescribed tabs per day' here
+                temp_days = float(data[12])  ## <-- 'prescription days' here
                 # skip the row if temp_days == 0
                 if temp_days == 0:
                     print("it is a prn medication: skipping the row")
@@ -58,7 +58,7 @@ with open('output.csv', 'w', newline='', encoding = 'utf-8') as fcsv:
                 temp_olzdose = temp_olzdose + olzdose
                 # dates is a list of all the prescription dates in this patient
                 # append the prescription date to the list 'dates'
-                m2 = re.search('(\d+)(\-)(\d+)(\-)(\d+)', data[6])  ## <-- '약품처방일' here
+                m2 = re.search('(\d+)(\-)(\d+)(\-)(\d+)', data[6])  ## <-- 'prescription date' here
                 # if it is prescribed on the same day, do not count temp_days
                 if prescription_date == date(int(m2.group(1)), int(m2.group(3)), int(m2.group(5))):
                     totaldays = totaldays
@@ -78,7 +78,11 @@ with open('output.csv', 'w', newline='', encoding = 'utf-8') as fcsv:
         else:
             # if it is the next patient, calculate the average olzdose
             # totaldays = (max(dates)-min(dates)).days  ## it is for inpatients maybe
-            avg_olzdose = temp_olzdose / totaldays
+            if totaldays == 0:
+                #returns 0 as average dose when the patient got prescription for 0 day since divding with 0 returns error
+                avg_olzdose = 0
+            else:
+                avg_olzdose = temp_olzdose / totaldays
             print('******************next patient*********************')
             # then write the patient ID and summed olzdose to the csv file
             writer.writerow({'patient': patient, 'olzdose': avg_olzdose, 'totaldays': totaldays})
@@ -87,16 +91,16 @@ with open('output.csv', 'w', newline='', encoding = 'utf-8') as fcsv:
             totaldays = 0.0
             temp_olzdose = 0.0
             dates = []
-            patient = data[1]  ## <-- '환자번호' here
+            patient = data[1]  ## <-- 'patient ID' here
             # after initialising, process the first row of the next patient
             if chemical[0] in drugs:
                 # \s: a space between chemical names and dosage, \d: dosage, .{0,4}: whatever numbers or characters till 'mg'
-                m1 = re.search('(\s)(\d+.{0,4})(mg)', data[7])  ## <-- '약품명(성분명)' here
+                m1 = re.search('(\s)(\d+.{0,4})(mg)', data[7])  ## <-- 'drug name' here
                 # taking numbers only and then converting into float
                 dosage = float(m1.group(2))
                 # totaltabs is the total number of prescribed tablets
-                totaltabs = float(data[8])  ## <-- '포장단위1일약품투여량' here
-                temp_days = float(data[12])  ## <-- '투약일수' here
+                totaltabs = float(data[8])  ## <-- 'prescribed tabs per day' here
+                temp_days = float(data[12])  ## <-- 'prescription days' here
                 # the total dosage = totaltabs multiplied by dosage per tab and prescribed days
                 totaldose = dosage * totaltabs * temp_days
                 # olzdose is olanzapine equivalent dosage of 'totaldose'
@@ -105,7 +109,7 @@ with open('output.csv', 'w', newline='', encoding = 'utf-8') as fcsv:
                 temp_olzdose = temp_olzdose + olzdose
                 # dates is a list of all the prescription dates in this patient
                 # append the prescription date to the list 'dates'
-                m2 = re.search('(\d+)(\-)(\d+)(\-)(\d+)', data[6])  ## <-- '약품처방일' here
+                m2 = re.search('(\d+)(\-)(\d+)(\-)(\d+)', data[6])  ## <-- 'prescription date' here
                 # if it is prescribed on the same day, do not count temp_days
                 if prescription_date == date(int(m2.group(1)), int(m2.group(3)), int(m2.group(5))):
                     totaldays = totaldays
